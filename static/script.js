@@ -442,6 +442,16 @@ function displayResult(data) {
         },
         50
     );
+    
+
+// ======================================
+// SAVE TO HISTORY
+// ======================================
+
+saveScan(
+    data,
+    messageInput.value.trim()
+);
 
 
     // ======================================
@@ -485,3 +495,222 @@ if (analyzeAgainButton) {
         }
     );
 }
+
+// ==========================================
+// RECENT SCAN HISTORY
+// ==========================================
+
+const scanHistory =
+    document.getElementById("scanHistory");
+
+const clearHistoryButton =
+    document.getElementById("clearHistoryButton");
+
+
+// ==========================================
+// LOAD HISTORY
+// ==========================================
+
+function loadHistory() {
+
+    const history =
+        JSON.parse(
+            localStorage.getItem(
+                "mailguardHistory"
+            )
+        ) || [];
+
+
+    if (history.length === 0) {
+
+        scanHistory.innerHTML = `
+            <div class="empty-history">
+
+                <div class="empty-history-icon">
+                    ◷
+                </div>
+
+                <h3>
+                    No recent analyses
+                </h3>
+
+                <p>
+                    Your analyzed messages will appear here.
+                </p>
+
+            </div>
+        `;
+
+        clearHistoryButton.style.display =
+            "none";
+
+        return;
+    }
+
+
+    clearHistoryButton.style.display =
+        "block";
+
+
+    scanHistory.innerHTML =
+        history.map(scan => {
+
+            const isSpam =
+                scan.prediction === "SPAM";
+
+
+            return `
+                <div class="scan-item">
+
+                    <div class="scan-status ${
+                        isSpam ? "spam" : "safe"
+                    }">
+
+                        ${
+                            isSpam
+                                ? "🚨"
+                                : "✓"
+                        }
+
+                    </div>
+
+
+                    <div class="scan-details">
+
+                        <div class="scan-message">
+
+                            ${escapeHtml(
+                                scan.message
+                            )}
+
+                        </div>
+
+
+                        <div class="scan-time">
+
+                            ${scan.time}
+
+                            ·
+
+                            ${
+                                isSpam
+                                    ? "Spam"
+                                    : "Not Spam"
+                            }
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="scan-confidence">
+
+                        ${scan.confidence}%
+
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
+}
+
+
+// ==========================================
+// SAVE SCAN
+// ==========================================
+
+function saveScan(data, message) {
+
+    const history =
+        JSON.parse(
+            localStorage.getItem(
+                "mailguardHistory"
+            )
+        ) || [];
+
+
+    const scan = {
+
+        message:
+            message.length > 85
+                ? message.substring(0, 85) + "..."
+                : message,
+
+        prediction:
+            data.prediction,
+
+        confidence:
+            data.confidence,
+
+        time:
+            new Date().toLocaleTimeString(
+                [],
+                {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            )
+    };
+
+
+    history.unshift(scan);
+
+
+    // Keep only latest 5 scans
+
+    const updatedHistory =
+        history.slice(0, 5);
+
+
+    localStorage.setItem(
+        "mailguardHistory",
+        JSON.stringify(
+            updatedHistory
+        )
+    );
+
+
+    loadHistory();
+}
+
+
+// ==========================================
+// ESCAPE HTML
+// ==========================================
+
+function escapeHtml(text) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+    div.textContent = text;
+
+    return div.innerHTML;
+}
+
+
+// ==========================================
+// CLEAR HISTORY
+// ==========================================
+
+clearHistoryButton.addEventListener(
+    "click",
+    () => {
+
+        localStorage.removeItem(
+            "mailguardHistory"
+        );
+
+        loadHistory();
+    }
+);
+
+
+// ==========================================
+// LOAD ON START
+// ==========================================
+
+loadHistory();
