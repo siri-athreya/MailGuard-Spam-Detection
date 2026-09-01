@@ -453,3 +453,35 @@ function displayResult(data) {
         block: "center"
     });
 }
+
+// ==========================================
+// ANALYZE ANOTHER MESSAGE
+// ==========================================
+
+const analyzeAgainButton =
+    document.getElementById("analyzeAgainButton");
+
+if (analyzeAgainButton) {
+
+    analyzeAgainButton.addEventListener(
+        "click",
+        () => {
+
+            messageInput.value = "";
+
+            charCount.textContent =
+                "0 / 10,000";
+
+            resultSection.classList.add(
+                "hidden"
+            );
+
+            messageInput.focus();
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }
+    );
+}
